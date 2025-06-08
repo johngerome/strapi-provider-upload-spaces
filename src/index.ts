@@ -49,6 +49,7 @@ export function init(providerOptions: ProviderOptions) {
           file,
           cdn,
           bucket,
+          directory,
           endpoint,
         });
 

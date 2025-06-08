@@ -13,22 +13,24 @@ export function getFileKey(file: File, directory?: string): string {
 
 export function getFileUrl({
   file,
+  directory = '',
   cdn,
   bucket,
   endpoint,
 }: {
   file: File;
+  directory?: string;
   cdn?: string;
   bucket?: string;
   endpoint?: string;
 }): string {
-  if (cdn) {
-    return `${cdn.replace(/\/$/, '')}/${getFileKey(file)}`;
-  }
-
   if (!bucket || !endpoint) {
     throw new Error('Bucket and endpoint are required');
   }
 
-  return `https://${bucket}.${endpoint.replace(/^https?:\/\//, '')}/${getFileKey(file)}`;
+  if (cdn) {
+    return `${cdn.replace(/\/$/, '')}/${getFileKey(file, directory)}`;
+  }
+
+  return `https://${bucket}.${endpoint.replace(/^https?:\/\//, '')}/${getFileKey(file, directory)}`;
 }
