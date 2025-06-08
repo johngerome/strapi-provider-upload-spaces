@@ -28,7 +28,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "release": "pnpm dlx bumpp -r --execute=\"pnpm run release:prepare\" --all",
-    "release:prepare": "pnpm check-types && pnpm build"
+    "release:prepare": "pnpm test && pnpm check-types && pnpm build"
   },
   "packageManager": "pnpm@10.11.1",
   "engines": {
