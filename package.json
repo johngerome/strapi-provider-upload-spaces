@@ -1,6 +1,6 @@
 {
   "name": "@johngerome/strapi-provider-upload-spaces",
-  "version": "1.0.1-beta.1",
+  "version": "1.0.1-beta.2",
   "description": "Strapi provider for uploading files to DigitalOcean Spaces",
   "license": "MIT",
   "keywords": [
