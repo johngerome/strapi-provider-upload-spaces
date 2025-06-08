@@ -25,6 +25,8 @@
     "check-types": "tsc --noEmit",
     "prepare": "husky",
     "format": "prettier --write ./src",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "release": "pnpm dlx bumpp -r --execute=\"pnpm run release:prepare\" --all",
     "release:prepare": "pnpm check-types && pnpm build"
   },
@@ -41,7 +43,8 @@
     "@types/node": "^22.15.30",
     "husky": "^9.1.7",
     "prettier": "^3.5.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.2"
   },
   "lint-staged": {
     "src/**/*": "prettier --write"
