@@ -29,7 +29,7 @@ pnpm add @johngerome/strapi-provider-upload-spaces
 
 ## Configuration
 
-Edit your Strapi configuration in `./config/plugins.js` or create it if it doesn't exist:
+Edit your Strapi configuration in `./config/plugins.js`:
 
 ```javascript
 module.exports = ({ env }) => ({
@@ -51,6 +51,47 @@ module.exports = ({ env }) => ({
     },
   },
 });
+```
+
+## Security Middleware Configuration
+
+Due to the default settings in the Strapi Security Middleware you will need to modify the `contentSecurityPolicy` settings to properly see thumbnail previews in the Media Library.
+
+Edit your Strapi configuration in `./config/middlewares.js`:
+
+```javascript
+module.exports = [
+  // ...
+  {
+    name: 'strapi::security',
+    config: {
+      contentSecurityPolicy: {
+        useDefaults: true,
+        directives: {
+          'connect-src': ["'self'", 'https:'],
+          'img-src': [
+            "'self'",
+            'data:',
+            'blob:',
+            'market-assets.strapi.io',
+            'yourBucketName.yourRegion.cdn.digitaloceanspaces.com', // with CDN
+            'yourBucketName.yourRegion.digitaloceanspaces.com',
+          ],
+          'media-src': [
+            "'self'",
+            'data:',
+            'blob:',
+            'market-assets.strapi.io',
+            'yourBucketName.yourRegion.cdn.digitaloceanspaces.com', // with CDN
+            'yourBucketName.yourRegion.digitaloceanspaces.com',
+          ],
+          upgradeInsecureRequests: null,
+        },
+      },
+    },
+  },
+  // ...
+];
 ```
 
 ## Environment Variables
