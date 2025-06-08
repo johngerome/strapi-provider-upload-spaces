@@ -1,0 +1,12 @@
+{
+  "types": {
+    "feat": { "title": "✨ Features" },
+    "refactor": { "title": "💅 Refactoring" },
+    "perf": { "title": "⚡ Performance Improvements" },
+    "fix": { "title": "🐞 Bug Fixes" },
+    "docs": { "title": "📖 Documentation" },
+    "style": { "title": "🎨 Code Style" },
+    "test": { "title": "🧪 Tests" },
+    "build": { "title": "📦 Build System" }
+  }
+}
