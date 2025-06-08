@@ -50,6 +50,11 @@ module.exports = ({ env }) => ({
         cdn: env('DO_SPACE_CDN'), // Optional, CDN URL if configured
         ACL: env('DO_SPACE_ACL', 'public-read'), // Optional, defaults to 'public-read'
       },
+      actionOptions: {
+        upload: {},
+        uploadStream: {},
+        delete: {},
+      },
     },
   },
 });

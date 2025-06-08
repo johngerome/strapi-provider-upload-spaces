@@ -28,7 +28,7 @@ export function init(providerOptions: ProviderOptions) {
   });
 
   return {
-    async upload(file: File): Promise<File> {
+    async upload(file: File, customParams = {}): Promise<File> {
       const fileKey = getFileKey(file, directory);
 
       try {
@@ -39,9 +39,7 @@ export function init(providerOptions: ProviderOptions) {
             Body: file.buffer,
             ContentType: file.mime,
             ACL,
-            Metadata: {
-              'Content-Type': file.mime,
-            },
+            ...customParams,
           })
         );
 
@@ -68,7 +66,7 @@ export function init(providerOptions: ProviderOptions) {
       }
     },
 
-    async uploadStream(file: File): Promise<File> {
+    async uploadStream(file: File, customParams = {}): Promise<File> {
       if (!file.stream) {
         throw new Error('File stream is required');
       }
@@ -87,7 +85,7 @@ export function init(providerOptions: ProviderOptions) {
           .on('end', async () => {
             file.buffer = Buffer.concat(chunks);
             try {
-              const result = await this.upload(file);
+              const result = await this.upload(file, customParams);
               resolve(result);
             } catch (error) {
               reject(error);
@@ -96,7 +94,7 @@ export function init(providerOptions: ProviderOptions) {
       });
     },
 
-    async delete(file: File): Promise<void> {
+    async delete(file: File, customParams = {}): Promise<void> {
       const fileKey =
         file.provider_metadata?.key || getFileKey(file, directory);
 
@@ -105,6 +103,7 @@ export function init(providerOptions: ProviderOptions) {
           new DeleteObjectCommand({
             Bucket: bucket,
             Key: fileKey,
+            ...customParams,
           })
         );
       } catch (error) {
