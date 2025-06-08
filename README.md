@@ -4,7 +4,7 @@
 ![npm package minimized gzipped size (scoped)](https://img.shields.io/bundlejs/size/@johngerome/strapi-provider-upload-spaces%40latest)
 ![NPM Version](https://img.shields.io/npm/v/@johngerome/strapi-provider-upload-spaces)
 
-> A Strapi provider for uploading files to DigitalOcean Spaces.
+> A Strapi provider for uploading files to DigitalOcean Spaces. Compatible with Strapi v4 and v5.
 
 
 ## Installation
