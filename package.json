@@ -3,7 +3,6 @@
   "version": "1.0.1-beta.1",
   "description": "Strapi provider for uploading files to DigitalOcean Spaces",
   "license": "MIT",
-  "type": "module",
   "keywords": [
     "strapi",
     "upload",
@@ -16,12 +15,10 @@
     "type": "git",
     "url": "git+https://github.com/johngerome/strapi-provider-upload-spaces.git"
   },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "dev": "tsc --watch",
-    "build": "tsup ./src --format cjs,esm",
+    "build": "tsc",
     "check-types": "tsc --noEmit",
     "prepare": "husky",
     "format": "prettier --write ./src",
@@ -41,7 +38,6 @@
     "@types/node": "^22.15.30",
     "husky": "^9.1.7",
     "prettier": "^3.5.3",
-    "tsup": "^8.5.0",
     "typescript": "^5.8.3"
   },
   "lint-staged": {
