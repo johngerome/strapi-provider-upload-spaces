@@ -1,0 +1,48 @@
+{
+  "name": "strapi-provider-upload-spaces",
+  "version": "1.0.0",
+  "description": "Strapi provider for uploading files to DigitalOcean Spaces",
+  "license": "MIT",
+  "keywords": [
+    "strapi",
+    "upload",
+    "provider",
+    "digitalocean",
+    "spaces"
+  ],
+  "author": "John Gerome Baldonado <johngerome@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johngerome/strapi-provider-upload-spaces.git"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc",
+    "check-types": "tsc --noEmit",
+    "prepare": "husky",
+    "format": "prettier --write ./src",
+    "release": "pnpm dlx bumpp -r --execute=\"pnpm run release:prepare\" --all",
+    "release:prepare": "pnpm check-types && pnpm build"
+  },
+  "packageManager": "pnpm@10.11.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.826.0",
+    "@aws-sdk/s3-request-presigner": "^3.826.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node18": "^18.2.4",
+    "@types/node": "^22.15.30",
+    "husky": "^9.1.7",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  },
+  "lint-staged": {
+    "src/**/*": "prettier --write"
+  }
+}
