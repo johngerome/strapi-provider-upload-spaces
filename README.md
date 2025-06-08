@@ -35,7 +35,7 @@ Edit your Strapi configuration in `./config/plugins.js`:
 module.exports = ({ env }) => ({
   upload: {
     config: {
-      provider: 'strapi-provider-upload-spaces',
+      provider: '@johngerome/strapi-provider-upload-spaces',
       providerOptions: {
         credentials: {
           accessKeyId: env('DO_SPACE_ACCESS_KEY'),
