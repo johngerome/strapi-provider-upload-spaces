@@ -1,8 +1,10 @@
 # @johngerome/strapi-provider-upload-spaces
 
 [![Release](https://github.com/johngerome/strapi-provider-upload-spaces/actions/workflows/release.yml/badge.svg)](https://github.com/johngerome/strapi-provider-upload-spaces/actions/workflows/release.yml)
-![npm package minimized gzipped size (scoped)](https://img.shields.io/bundlejs/size/@johngerome/strapi-provider-upload-spaces%40latest)
+![npm bundle size](https://img.shields.io/bundlephobia/min/%40johngerome%2Fstrapi-provider-upload-spaces)
 ![NPM Version](https://img.shields.io/npm/v/@johngerome/strapi-provider-upload-spaces)
+![GitHub License](https://img.shields.io/github/license/johngerome/strapi-provider-upload-spaces)
+
 
 > A Strapi provider for uploading files to DigitalOcean Spaces. Compatible with Strapi v4 and v5.
 
