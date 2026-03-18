@@ -108,6 +108,14 @@ describe('getFileUrl', () => {
     expect(result).toBe('https://cdn.example.com/abc123.jpg');
   });
 
+  it('should return CDN URL without bucket or endpoint when only cdn is provided', () => {
+    const result = getFileUrl({
+      file: mockFile,
+      cdn: 'https://cdn.example.com',
+    });
+    expect(result).toBe('https://cdn.example.com/abc123.jpg');
+  });
+
   it('should handle CDN URL with trailing slash', () => {
     const result = getFileUrl({
       file: mockFile,

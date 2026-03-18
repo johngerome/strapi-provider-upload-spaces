@@ -1,3 +1,4 @@
+import type { Readable } from 'stream';
 import type { ObjectCannedACL } from '@aws-sdk/client-s3';
 
 export type ProviderOptions = {
@@ -10,7 +11,8 @@ export type ProviderOptions = {
   bucket: string;
   directory?: string;
   cdn?: string;
-  ACL?: ObjectCannedACL;
+  ACL?: ObjectCannedACL | (string & {});
+  signedUrlExpires?: number;
 };
 
 export type FileMetadata = {
@@ -26,7 +28,7 @@ export type File = {
   mime: string;
   size: number;
   buffer?: Buffer;
-  stream?: NodeJS.ReadableStream;
+  stream?: Readable;
   url?: string;
   provider_metadata?: FileMetadata;
 };

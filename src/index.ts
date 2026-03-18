@@ -3,9 +3,10 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  ObjectCannedACL,
 } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-
+import { getSignedUrl as generatePresignedUrl } from '@aws-sdk/s3-request-presigner';
+import { errors } from '@strapi/utils';
 import { File, ProviderOptions } from './types';
 import { getFileKey, getFileUrl } from './utils';
 
@@ -18,6 +19,7 @@ export function init(providerOptions: ProviderOptions) {
     directory = '',
     cdn,
     ACL = 'public-read',
+    signedUrlExpires = 900,
   } = providerOptions;
 
   const s3Client = new S3Client({
@@ -28,33 +30,37 @@ export function init(providerOptions: ProviderOptions) {
   });
 
   return {
-    async upload(file: File, customParams = {}): Promise<File> {
-      const fileKey = getFileKey(file, directory);
+    async upload(file: File, customParams?: object): Promise<File> {
+      const fileKey =
+        file.provider_metadata?.key || getFileKey(file, directory);
+      const targetBucket = file.provider_metadata?.bucket || bucket;
 
       try {
         await s3Client.send(
           new PutObjectCommand({
-            Bucket: bucket,
-            Key: fileKey,
-            Body: file.buffer,
-            ContentType: file.mime,
-            ACL,
             ...customParams,
+            Bucket: targetBucket,
+            Key: fileKey,
+            // Prefer stream if present (e.g. called from uploadStream),
+            // fall back to buffer for direct uploads.
+            Body: file.stream ?? file.buffer,
+            ContentType: file.mime,
+            ACL: ACL as ObjectCannedACL,
           })
         );
 
-        file.url = getFileUrl({
+        const url = getFileUrl({
           file,
           cdn,
-          bucket,
+          bucket: targetBucket,
           directory,
           endpoint,
         });
-
         return {
           ...file,
+          url,
           provider_metadata: {
-            bucket,
+            bucket: targetBucket,
             key: fileKey,
             region,
           },
@@ -66,44 +72,28 @@ export function init(providerOptions: ProviderOptions) {
       }
     },
 
-    async uploadStream(file: File, customParams = {}): Promise<File> {
+    async uploadStream(file: File, customParams?: object): Promise<File> {
       if (!file.stream) {
         throw new Error('File stream is required');
       }
 
-      // Convert stream to buffer for S3 upload
-      return new Promise((resolve, reject) => {
-        const chunks: Buffer[] = [];
-
-        if (!file.stream) {
-          throw new Error('File stream is required');
-        }
-
-        file.stream
-          .on('data', (chunk: Buffer) => chunks.push(Buffer.from(chunk)))
-          .on('error', (err: Error) => reject(err))
-          .on('end', async () => {
-            file.buffer = Buffer.concat(chunks);
-            try {
-              const result = await this.upload(file, customParams);
-              resolve(result);
-            } catch (error) {
-              reject(error);
-            }
-          });
-      });
+      // Pass the stream directly to upload(); PutObjectCommand.Body accepts
+      // Readable, so the AWS SDK pipes the data without buffering the entire
+      // file into memory. stream.destroy() on failure is handled by the SDK.
+      return this.upload(file, customParams);
     },
 
-    async delete(file: File, customParams = {}): Promise<void> {
+    async delete(file: File, customParams?: object): Promise<void> {
       const fileKey =
         file.provider_metadata?.key || getFileKey(file, directory);
+      const targetBucket = file.provider_metadata?.bucket || bucket;
 
       try {
         await s3Client.send(
           new DeleteObjectCommand({
-            Bucket: bucket,
-            Key: fileKey,
             ...customParams,
+            Bucket: targetBucket,
+            Key: fileKey,
           })
         );
       } catch (error) {
@@ -118,26 +108,30 @@ export function init(providerOptions: ProviderOptions) {
       { sizeLimit }: { sizeLimit: number }
     ): Promise<void> {
       if (file.size > sizeLimit) {
-        throw new Error(`File size exceeds limit: ${file.size} > ${sizeLimit}`);
+        throw new errors.PayloadTooLargeError(
+          `File size exceeds limit: ${file.size} > ${sizeLimit}`
+        );
       }
     },
 
     async getSignedUrl(file: File): Promise<{ url: string }> {
       const fileKey =
         file.provider_metadata?.key || getFileKey(file, directory);
+      const targetBucket = file.provider_metadata?.bucket || bucket;
 
       try {
         const command = new GetObjectCommand({
-          Bucket: bucket,
+          Bucket: targetBucket,
           Key: fileKey,
         });
-
-        // Default expiration is 15 minutes (900 seconds)
-        const url = await getSignedUrl(s3Client, command, { expiresIn: 900 });
-
+        const url = await generatePresignedUrl(s3Client, command, {
+          expiresIn: signedUrlExpires,
+        });
         return { url };
       } catch (error) {
-        throw new Error(`Error generating signed URL: ${error}`);
+        throw new errors.ForbiddenError(
+          `Error generating signed URL: ${error}`
+        );
       }
     },
 

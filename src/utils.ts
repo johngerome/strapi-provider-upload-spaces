@@ -24,12 +24,12 @@ export function getFileUrl({
   bucket?: string;
   endpoint?: string;
 }): string {
-  if (!bucket || !endpoint) {
-    throw new Error('Bucket and endpoint are required');
-  }
-
   if (cdn) {
     return `${cdn.replace(/\/$/, '')}/${getFileKey(file, directory)}`;
+  }
+
+  if (!bucket || !endpoint) {
+    throw new Error('Bucket and endpoint are required');
   }
 
   return `https://${bucket}.${endpoint.replace(/^https?:\/\//, '')}/${getFileKey(file, directory)}`;
