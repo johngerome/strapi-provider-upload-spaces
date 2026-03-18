@@ -12,6 +12,7 @@ export type ProviderOptions = {
   directory?: string;
   cdn?: string;
   ACL?: ObjectCannedACL;
+  signedUrlExpires?: number;
 };
 
 export type FileMetadata = {

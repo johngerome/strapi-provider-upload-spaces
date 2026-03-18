@@ -49,6 +49,7 @@ module.exports = ({ env }) => ({
         directory: env('DO_SPACE_DIRECTORY', ''), // Optional, defaults to root
         cdn: env('DO_SPACE_CDN'), // Optional, CDN URL if configured
         ACL: env('DO_SPACE_ACL', 'public-read'), // Optional, defaults to 'public-read'
+        signedUrlExpires: env('DO_SPACE_SIGNED_URL_EXPIRES', 900), // Optional, signed URL lifetime in seconds, defaults to 900 (15 minutes)
       },
       actionOptions: {
         upload: {},
@@ -114,6 +115,7 @@ DO_SPACE_BUCKET=your_space_name
 DO_SPACE_DIRECTORY=optional_directory_path
 DO_SPACE_CDN=optional_cdn_url
 DO_SPACE_ACL=optional_acl_setting
+DO_SPACE_SIGNED_URL_EXPIRES=900
 ```
 
 ## License

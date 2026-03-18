@@ -18,6 +18,7 @@ export function init(providerOptions: ProviderOptions) {
     directory = '',
     cdn,
     ACL = 'public-read',
+    signedUrlExpires = 900,
   } = providerOptions;
 
   const s3Client = new S3Client({
@@ -138,9 +139,8 @@ export function init(providerOptions: ProviderOptions) {
           Key: fileKey,
         });
 
-        // Default expiration is 15 minutes (900 seconds)
         const url = await generatePresignedUrl(s3Client, command, {
-          expiresIn: 900,
+          expiresIn: signedUrlExpires,
         });
 
         return { url };
