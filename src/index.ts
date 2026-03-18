@@ -37,12 +37,12 @@ export function init(providerOptions: ProviderOptions) {
       try {
         await s3Client.send(
           new PutObjectCommand({
+            ...customParams,
             Bucket: bucket,
             Key: fileKey,
             Body: file.buffer,
             ContentType: file.mime,
             ACL,
-            ...customParams,
           })
         );
 
@@ -80,13 +80,17 @@ export function init(providerOptions: ProviderOptions) {
 
         stream
           .on('data', (chunk: Buffer) => chunks.push(Buffer.from(chunk)))
-          .on('error', (err: Error) => reject(err))
+          .on('error', (err: Error) => {
+            stream.destroy(err);
+            reject(err);
+          })
           .on('end', async () => {
             file.buffer = Buffer.concat(chunks);
             try {
               const result = await this.upload(file, customParams);
               resolve(result);
             } catch (error) {
+              stream.destroy();
               reject(error);
             }
           });
@@ -103,9 +107,9 @@ export function init(providerOptions: ProviderOptions) {
       try {
         await s3Client.send(
           new DeleteObjectCommand({
+            ...customParams,
             Bucket: bucket,
             Key: fileKey,
-            ...customParams,
           })
         );
       } catch (error) {
