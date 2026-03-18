@@ -4,7 +4,7 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
 } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { getSignedUrl as generatePresignedUrl } from '@aws-sdk/s3-request-presigner';
 
 import { File, ProviderOptions } from './types';
 import { getFileKey, getFileUrl } from './utils';
@@ -43,16 +43,11 @@ export function init(providerOptions: ProviderOptions) {
           })
         );
 
-        file.url = getFileUrl({
-          file,
-          cdn,
-          bucket,
-          directory,
-          endpoint,
-        });
+        const url = getFileUrl({ file, cdn, bucket, directory, endpoint });
 
         return {
           ...file,
+          url,
           provider_metadata: {
             bucket,
             key: fileKey,
@@ -67,7 +62,9 @@ export function init(providerOptions: ProviderOptions) {
     },
 
     async uploadStream(file: File, customParams = {}): Promise<File> {
-      if (!file.stream) {
+      const { stream } = file;
+
+      if (!stream) {
         throw new Error('File stream is required');
       }
 
@@ -75,11 +72,7 @@ export function init(providerOptions: ProviderOptions) {
       return new Promise((resolve, reject) => {
         const chunks: Buffer[] = [];
 
-        if (!file.stream) {
-          throw new Error('File stream is required');
-        }
-
-        file.stream
+        stream
           .on('data', (chunk: Buffer) => chunks.push(Buffer.from(chunk)))
           .on('error', (err: Error) => reject(err))
           .on('end', async () => {
@@ -133,7 +126,9 @@ export function init(providerOptions: ProviderOptions) {
         });
 
         // Default expiration is 15 minutes (900 seconds)
-        const url = await getSignedUrl(s3Client, command, { expiresIn: 900 });
+        const url = await generatePresignedUrl(s3Client, command, {
+          expiresIn: 900,
+        });
 
         return { url };
       } catch (error) {
