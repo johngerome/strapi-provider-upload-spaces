@@ -6,7 +6,6 @@ import {
   ObjectCannedACL,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl as generatePresignedUrl } from '@aws-sdk/s3-request-presigner';
-
 import { File, ProviderOptions } from './types';
 import { getFileKey, getFileUrl } from './utils';
 
@@ -34,22 +33,25 @@ export function init(providerOptions: ProviderOptions) {
       file: File,
       customParams: Record<string, unknown> = {}
     ): Promise<File> {
-      const fileKey = getFileKey(file, directory);
+      const fileKey =
+        file.provider_metadata?.key || getFileKey(file, directory);
+      const targetBucket = file.provider_metadata?.bucket || bucket;
 
       try {
         await s3Client.send(
           new PutObjectCommand({
             ...customParams,
-            Bucket: bucket,
+            Bucket: targetBucket,
             Key: fileKey,
-            Body: file.buffer,
+            // Prefer stream if present (e.g. called from uploadStream),
+            // fall back to buffer for direct uploads.
+            Body: file.stream ?? file.buffer,
             ContentType: file.mime,
             ACL: ACL as ObjectCannedACL,
           })
         );
 
         const url = getFileUrl({ file, cdn, bucket, directory, endpoint });
-
         return {
           ...file,
           url,
@@ -70,33 +72,14 @@ export function init(providerOptions: ProviderOptions) {
       file: File,
       customParams: Record<string, unknown> = {}
     ): Promise<File> {
-      const { stream } = file;
-
-      if (!stream) {
+      if (!file.stream) {
         throw new Error('File stream is required');
       }
 
-      // Convert stream to buffer for S3 upload
-      return new Promise((resolve, reject) => {
-        const chunks: Buffer[] = [];
-
-        stream
-          .on('data', (chunk: Buffer) => chunks.push(Buffer.from(chunk)))
-          .on('error', (err: Error) => {
-            stream.destroy(err);
-            reject(err);
-          })
-          .on('end', async () => {
-            file.buffer = Buffer.concat(chunks);
-            try {
-              const result = await this.upload(file, customParams);
-              resolve(result);
-            } catch (error) {
-              stream.destroy();
-              reject(error);
-            }
-          });
-      });
+      // Pass the stream directly to upload(); PutObjectCommand.Body accepts
+      // Readable, so the AWS SDK pipes the data without buffering the entire
+      // file into memory. stream.destroy() on failure is handled by the SDK.
+      return this.upload(file, customParams);
     },
 
     async delete(
@@ -133,17 +116,16 @@ export function init(providerOptions: ProviderOptions) {
     async getSignedUrl(file: File): Promise<{ url: string }> {
       const fileKey =
         file.provider_metadata?.key || getFileKey(file, directory);
+      const targetBucket = file.provider_metadata?.bucket || bucket;
 
       try {
         const command = new GetObjectCommand({
-          Bucket: bucket,
+          Bucket: targetBucket,
           Key: fileKey,
         });
-
         const url = await generatePresignedUrl(s3Client, command, {
           expiresIn: signedUrlExpires,
         });
-
         return { url };
       } catch (error) {
         throw new Error(`Error generating signed URL: ${error}`);
