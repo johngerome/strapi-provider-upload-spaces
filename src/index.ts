@@ -48,7 +48,13 @@ export function init(providerOptions: ProviderOptions) {
           })
         );
 
-        const url = getFileUrl({ file, cdn, bucket, directory, endpoint });
+        const url = getFileUrl({
+          file,
+          cdn,
+          bucket: targetBucket,
+          directory,
+          endpoint,
+        });
         return {
           ...file,
           url,
