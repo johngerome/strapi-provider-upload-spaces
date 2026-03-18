@@ -1,0 +1,350 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+language: "en-US"
+tone_instructions: "Be concise, constructive, and developer-friendly. Focus on TypeScript type safety, security around credential handling, and npm package quality."
+early_access: false
+enable_free_tier: true
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai summary"
+  high_level_summary_instructions: |
+    Generate concise release notes as a bullet list grouped under these headings (omit empty groups):
+    - **Features** – new capabilities added to the provider
+    - **Bug Fixes** – incorrect behaviours corrected
+    - **Security** – credential, ACL, or permission changes
+    - **Breaking Changes** – public API or configuration shape changes
+    - **Chores** – dependency updates, CI changes, refactors
+  auto_title_placeholder: "@coderabbitai"
+  auto_title_instructions: "Follow Conventional Commits: `<type>(<scope>): <short summary>`. Types: feat, fix, chore, docs, refactor, test, ci. Keep it under 72 characters."
+  review_status: true
+  review_details: true
+  commit_status: true
+  fail_commit_status: false
+  collapse_walkthrough: false
+  changed_files_summary: true
+  sequence_diagrams: true
+  estimate_code_review_effort: true
+  assess_linked_issues: true
+  related_issues: true
+  related_prs: true
+  suggested_labels: true
+  auto_apply_labels: false
+  suggested_reviewers: true
+  poem: false
+  enable_prompt_for_ai_agents: true
+
+  labeling_instructions:
+    - label: "bug"
+      instructions: "Apply when the PR fixes an incorrect behaviour, crash, or unexpected output in the upload provider (e.g. wrong file URL construction, broken stream handling, failed delete)."
+    - label: "feature"
+      instructions: "Apply when the PR adds a new capability to the provider, such as a new providerOptions field, a new Strapi interface method, or support for additional S3-compatible services."
+    - label: "security"
+      instructions: "Apply when the PR touches credential handling, ACL values, presigned URL logic, IAM permissions, or any other security-sensitive area."
+    - label: "breaking-change"
+      instructions: "Apply when the PR changes the public API (exported types or init() signature), removes a providerOptions field, or alters behaviour in a way that requires consumer migration."
+    - label: "documentation"
+      instructions: "Apply when the PR only updates README.md, code comments, or other documentation without changing runtime behaviour."
+    - label: "dependencies"
+      instructions: "Apply when the PR updates package.json dependencies, devDependencies, or pnpm-lock.yaml."
+    - label: "ci/cd"
+      instructions: "Apply when the PR modifies files under .github/workflows/ or other CI configuration."
+    - label: "test"
+      instructions: "Apply when the PR adds, removes, or refactors test files only (src/**/*.test.ts), without changing production code."
+
+  path_filters:
+    - "!dist/**"
+    - "!node_modules/**"
+    - "!pnpm-lock.yaml"
+
+  path_instructions:
+    - path: "src/**/*.ts"
+      instructions: |
+        - Enforce TypeScript strict-mode compliance: no implicit `any`, explicit return types on all exported functions, and proper handling of `null` / `undefined`.
+        - Ensure every async function has a try/catch (or propagates errors intentionally) with a descriptive, context-rich error message — never swallow stack traces.
+        - Verify AWS SDK v3 command pattern is used correctly: `s3Client.send(new XCommand({...}))`. The `S3Client` must be instantiated once inside `init()` and reused across all operations.
+        - No credentials, access keys, secret keys, or any other secrets must be hardcoded.
+        - Ensure proper resource cleanup: readable streams must be closed / destroyed on error paths to avoid memory leaks.
+        - Validate that all `Buffer` APIs used are compatible with the Node >=22 engine requirement declared in package.json.
+        - Prefer `const` over `let`; use destructuring for repeated property access.
+
+    - path: "src/index.ts"
+      instructions: |
+        - All six Strapi upload-provider interface methods must be present and correctly typed: `upload`, `uploadStream`, `delete`, `checkFileSize`, `getSignedUrl`, and `isPrivate`.
+        - `provider_metadata` must always be populated with at minimum `bucket`, `key`, and `region` so that future `delete` calls remain reliable even if the file moves between providers.
+        - `uploadStream` must fully buffer the readable stream before delegating to `upload`; ensure the `end` event handler awaits the inner call and correctly rejects on error.
+        - `getSignedUrl` expiration (currently 900 s) should ideally be driven by a `providerOptions.signedUrlExpires` field; if hardcoded, it must be documented.
+        - `isPrivate` must derive its return value from the runtime ACL option, not a hardcoded literal.
+        - `checkFileSize` must throw a Strapi-compatible error (not just `new Error`) if Strapi v5 expects a specific error shape.
+        - Confirm the `customParams` spread in `PutObjectCommand` cannot accidentally override `Bucket`, `Key`, or `Body`.
+
+    - path: "src/types.ts"
+      instructions: |
+        - Exported types must remain compatible with both Strapi v4 and v5 file interfaces; note any divergence explicitly.
+        - Prefer `type` aliases over `interface` for plain data shapes to keep consistency with the existing file.
+        - All optional config fields must use `?` shorthand; avoid `field: T | undefined` unions unless a distinction between absent and explicitly-undefined is required.
+        - `FileMetadata` must declare every field written to `provider_metadata` in `index.ts` so consumers have a stable, documented contract.
+        - Consider whether `ProviderOptions.ACL` should accept a broader `string` fallback alongside `ObjectCannedACL` for forward-compatibility with future AWS SDK releases.
+
+    - path: "src/utils.ts"
+      instructions: |
+        - `getFileKey` must produce a stable, deterministic key regardless of whether `directory` or `file.path` are absent, empty, or contain leading/trailing slashes.
+        - `getFileUrl` must consistently strip `https://` from the `endpoint` and trailing slashes from `cdn`; validate the regex used for this with edge cases (endpoint already lacking protocol, CDN with path prefix).
+        - All utility functions must be pure (no side effects, no I/O) and directly unit-testable in isolation.
+        - Avoid duplicating the path-normalisation logic that already exists in `getFileKey`; call it from `getFileUrl`.
+
+    - path: "src/**/*.test.ts"
+      instructions: |
+        - Use Vitest APIs exclusively: `describe`, `it`/`test`, `expect`, `vi.fn()`, `vi.mock()`, `vi.spyOn()`.
+        - All AWS SDK calls must be mocked — no real network calls in unit tests.
+        - Cover the following edge cases at minimum:
+            * `file.path` is undefined or an empty string
+            * `directory` is undefined, empty, or contains leading/trailing slashes
+            * Both `cdn` and `bucket+endpoint` are provided (CDN should take precedence)
+            * Stream emits an error before `end`
+            * `checkFileSize` with a file exactly at the limit vs. one byte over
+            * `isPrivate` with ACL = 'private' and ACL = 'public-read'
+        - Each `it` block should have a single, focused assertion; split multi-concern tests.
+        - Avoid snapshot tests for pure utility functions — prefer explicit `expect(...).toBe(...)`.
+        - Test file names must mirror the source file (e.g. `utils.test.ts` for `utils.ts`).
+
+    - path: "package.json"
+      instructions: |
+        - `peerDependencies` should declare the compatible `@strapi/strapi` version range (v4 and/or v5) if the provider depends on Strapi internals or types.
+        - `engines.node` must remain `>=22` unless the PR explicitly justifies broadening compatibility.
+        - `main` must point to `./dist/index.js` and `types` to `./dist/index.d.ts`.
+        - The `files` array must only include `"dist"` — never `src`, config files, or test files.
+        - Version bumps must follow Semantic Versioning: patch for bug fixes, minor for backwards-compatible features, major for breaking changes.
+        - Ensure `"packageManager"` field is kept in sync with the pnpm version used in CI.
+
+    - path: ".github/workflows/**"
+      instructions: |
+        - All secrets must be referenced as `${{ secrets.NAME }}` — never hardcoded or echoed to logs.
+        - Every `uses:` action must be pinned to a version tag (e.g. `actions/checkout@v4`), never `@main` or `@master`.
+        - Apply the principle of least privilege: only request the GitHub token permissions actually needed (e.g. `contents: write` only when creating releases).
+        - The release workflow must trigger exclusively on `v*` tag pushes to prevent accidental publishes.
+        - `NPM_CONFIG_PROVENANCE: true` must remain set to maintain npm supply-chain transparency.
+        - Verify Node.js version in `setup-node` matches the `engines.node` constraint in package.json (LTS is acceptable).
+        - `pnpm/action-setup` should be kept on the latest stable major version.
+
+    - path: "README.md"
+      instructions: |
+        - Keep all configuration examples, environment variable tables, and `ProviderOptions` field descriptions in sync with the actual types in `src/types.ts`.
+        - Code snippets must use the correct package name `@johngerome/strapi-provider-upload-spaces`.
+        - Any new `providerOptions` field added in a PR must appear in both the configuration example block and the environment variable reference section.
+        - Verify that the Security Middleware section remains accurate for both Strapi v4 and v5.
+
+  abort_on_close: true
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    auto_pause_after_reviewed_commits: 5
+    ignore_title_keywords:
+      - "WIP"
+      - "DO NOT MERGE"
+      - "[SKIP CI]"
+      - "DRAFT"
+    drafts: false
+    base_branches:
+      - "main"
+      - "master"
+
+  finishing_touches:
+    docstrings:
+      enabled: true
+    unit_tests:
+      enabled: true
+    simplify:
+      enabled: false
+    custom:
+      - name: "security audit"
+        instructions: |
+          Review the entire PR diff for security concerns specific to a cloud-storage upload provider:
+          1. Hardcoded or logged credentials / secrets.
+          2. Overly permissive ACL values being set as defaults.
+          3. Presigned URL expiry that is too long (>1 hour without explicit justification).
+          4. User-controlled input flowing into S3 key paths without sanitisation (path traversal risk).
+          5. Missing input validation on providerOptions fields (e.g. empty bucket name, malformed endpoint).
+          Report findings as inline comments with suggested fixes.
+
+  pre_merge_checks:
+    title:
+      mode: "warning"
+      requirements: |
+        Must follow Conventional Commits: `<type>(<optional scope>): <short summary>`.
+        Allowed types: feat, fix, chore, docs, refactor, test, ci, perf, build.
+        Must be written in the imperative mood (e.g. "add CDN support", not "added CDN support").
+        Must be under 72 characters.
+        Must not end with a period.
+    description:
+      mode: "warning"
+    issue_assessment:
+      mode: "warning"
+    custom_checks:
+      - name: "No hardcoded secrets"
+        mode: "error"
+        instructions: |
+          Fail if any modified file contains what appears to be a hardcoded AWS access key ID (pattern: AKIA[0-9A-Z]{16}),
+          secret access key, or any credential-like string outside of clearly-labelled test fixtures or
+          documentation examples. Environment variable references such as `process.env.DO_SPACE_ACCESS_KEY` are acceptable.
+      - name: "dist not committed"
+        mode: "warning"
+        instructions: |
+          Warn if any file inside the `dist/` directory is added or modified in this PR.
+          Build artifacts should be generated by CI during the release workflow and must not be committed to the repository.
+      - name: "Strapi provider interface completeness"
+        mode: "warning"
+        instructions: |
+          If `src/index.ts` is modified, verify that all six required Strapi upload-provider methods are still
+          exported from the object returned by `init()`: upload, uploadStream, delete, checkFileSize, getSignedUrl, isPrivate.
+          Warn if any method is missing or if its signature has changed in a potentially breaking way.
+
+  tools:
+    # Secret scanning — critical for a project that handles cloud storage credentials
+    gitleaks:
+      enabled: true
+    trufflehog:
+      enabled: true
+
+    # Static analysis for the TypeScript/JavaScript source
+    oxc:
+      enabled: true
+    ast-grep:
+      essential_rules: true
+
+    # Security pattern scanning
+    semgrep:
+      enabled: true
+
+    # GitHub Actions workflow linting
+    actionlint:
+      enabled: true
+
+    # Documentation linting
+    markdownlint:
+      enabled: true
+
+    # YAML linting (workflows, this config file)
+    yamllint:
+      enabled: true
+
+    # Shell script linting (husky hooks)
+    shellcheck:
+      enabled: true
+
+    # GitHub Checks integration — surface CI results in the review
+    github-checks:
+      enabled: true
+      timeout_ms: 120000
+
+    # OSV vulnerability scanning for npm dependencies
+    osvScanner:
+      enabled: true
+
+    # --- Disable tools irrelevant to a TypeScript/Node.js npm package ---
+
+    # Biome not configured in this project; Prettier is used for formatting
+    biome:
+      enabled: false
+    # No Dockerfile present
+    hadolint:
+      enabled: false
+    # No Terraform / IaC files
+    tflint:
+      enabled: false
+    checkov:
+      enabled: false
+    trivy:
+      enabled: false
+    # No Python source
+    ruff:
+      enabled: false
+    flake8:
+      enabled: false
+    pylint:
+      enabled: false
+    # No PHP source
+    phpstan:
+      enabled: false
+    phpmd:
+      enabled: false
+    phpcs:
+      enabled: false
+    # No Go source
+    golangci-lint:
+      enabled: false
+    # No Kotlin source
+    detekt:
+      enabled: false
+    # No Ruby source
+    rubocop:
+      enabled: false
+    brakeman:
+      enabled: false
+    # No Swift source
+    swiftlint:
+      enabled: false
+    # No Protobuf source
+    buf:
+      enabled: false
+    # No Rego source
+    regal:
+      enabled: false
+    # No Java source
+    pmd:
+      enabled: false
+    # No C/C++ source
+    clang:
+      enabled: false
+    cppcheck:
+      enabled: false
+    # No Rust source
+    clippy:
+      enabled: false
+    # No CircleCI config
+    circleci:
+      enabled: false
+    # No SQL source
+    sqlfluff:
+      enabled: false
+    # No Prisma schema
+    prismaLint:
+      enabled: false
+
+chat:
+  auto_reply: true
+  art: false
+  allow_non_org_members: true
+
+knowledge_base:
+  opt_out: false
+  web_search:
+    enabled: true
+  learnings:
+    scope: "local"
+  issues:
+    scope: "local"
+  pull_requests:
+    scope: "local"
+
+code_generation:
+  docstrings:
+    language: "en-US"
+    path_instructions:
+      - path: "src/**/*.ts"
+        instructions: |
+          Generate JSDoc comments for all exported functions and types.
+          Include @param (with type), @returns, and @throws tags where applicable.
+          Keep descriptions concise and focused on the DigitalOcean Spaces / S3 integration context.
+          Do not describe implementation details; describe intent and contract.
+  unit_tests:
+    path_instructions:
+      - path: "src/**/*.ts"
+        instructions: |
+          Generate Vitest unit tests (import from 'vitest').
+          Mock all @aws-sdk/client-s3 and @aws-sdk/s3-request-presigner calls with vi.mock().
+          Cover: happy path, error paths, missing optional params, stream failures, and ACL variations.
+          Place generated test files alongside the source file with a `.test.ts` suffix.
