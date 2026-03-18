@@ -29,10 +29,7 @@ export function init(providerOptions: ProviderOptions) {
   });
 
   return {
-    async upload(
-      file: File,
-      customParams: Record<string, unknown> = {}
-    ): Promise<File> {
+    async upload(file: File, customParams?: object): Promise<File> {
       const fileKey =
         file.provider_metadata?.key || getFileKey(file, directory);
       const targetBucket = file.provider_metadata?.bucket || bucket;
@@ -56,7 +53,7 @@ export function init(providerOptions: ProviderOptions) {
           ...file,
           url,
           provider_metadata: {
-            bucket,
+            bucket: targetBucket,
             key: fileKey,
             region,
           },
@@ -68,10 +65,7 @@ export function init(providerOptions: ProviderOptions) {
       }
     },
 
-    async uploadStream(
-      file: File,
-      customParams: Record<string, unknown> = {}
-    ): Promise<File> {
+    async uploadStream(file: File, customParams?: object): Promise<File> {
       if (!file.stream) {
         throw new Error('File stream is required');
       }
@@ -82,18 +76,16 @@ export function init(providerOptions: ProviderOptions) {
       return this.upload(file, customParams);
     },
 
-    async delete(
-      file: File,
-      customParams: Record<string, unknown> = {}
-    ): Promise<void> {
+    async delete(file: File, customParams?: object): Promise<void> {
       const fileKey =
         file.provider_metadata?.key || getFileKey(file, directory);
+      const targetBucket = file.provider_metadata?.bucket || bucket;
 
       try {
         await s3Client.send(
           new DeleteObjectCommand({
             ...customParams,
-            Bucket: bucket,
+            Bucket: targetBucket,
             Key: fileKey,
           })
         );
