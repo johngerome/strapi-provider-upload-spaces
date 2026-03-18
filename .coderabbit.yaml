@@ -73,7 +73,7 @@ reviews:
       instructions: |
         - All six Strapi upload-provider interface methods must be present and correctly typed: `upload`, `uploadStream`, `delete`, `checkFileSize`, `getSignedUrl`, and `isPrivate`.
         - `provider_metadata` must always be populated with at minimum `bucket`, `key`, and `region` so that future `delete` calls remain reliable even if the file moves between providers.
-        - `uploadStream` must fully buffer the readable stream before delegating to `upload`; ensure the `end` event handler awaits the inner call and correctly rejects on error.
+        - `uploadStream` should preserve streaming semantics where possible (stream directly to S3). If buffering is required for compatibility, enforce explicit size guards and document memory trade-offs.
         - `getSignedUrl` expiration (currently 900 s) should ideally be driven by a `providerOptions.signedUrlExpires` field; if hardcoded, it must be documented.
         - `isPrivate` must derive its return value from the runtime ACL option, not a hardcoded literal.
         - `checkFileSize` must throw a Strapi-compatible error (not just `new Error`) if Strapi v5 expects a specific error shape.
@@ -191,9 +191,9 @@ reviews:
 
           Patterns:
             1. AWS Access Key ID:
-               AKIA[0-9A-Z]{16}
+              (?:AKIA|ASIA)[0-9A-Z]{16}
             2. Credential assignment (key=value or key: value style, value ≥8 chars):
-               (?i)(?:secret[_-]?access[_-]?key|access[_-]?key[_-]?id|api[_-]?key|client[_-]?secret|auth[_-]?token)\s*[=:]\s*["']?[A-Za-z0-9/+\-_]{8,}["']?
+              (?i)(?:secret[_-]?access[_-]?key|access[_-]?key[_-]?id|api[_-]?key|client[_-]?secret|auth[_-]?token)\s*[=:]\s*["']?[A-Za-z0-9/+=._-]{8,}["']?
 
           Excluded paths — do NOT fail for matches found only in:
             - README.md or any file matching *.md (documentation examples)
