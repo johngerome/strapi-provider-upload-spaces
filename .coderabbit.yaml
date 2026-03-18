@@ -1,15 +1,15 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 
-language: "en-US"
-tone_instructions: "Be concise, constructive, and developer-friendly. Focus on TypeScript type safety, security around credential handling, and npm package quality."
+language: 'en-US'
+tone_instructions: 'Be concise, constructive, and developer-friendly. Focus on TypeScript type safety, security around credential handling, and npm package quality.'
 early_access: false
 enable_free_tier: true
 
 reviews:
-  profile: "assertive"
+  profile: 'assertive'
   request_changes_workflow: false
   high_level_summary: true
-  high_level_summary_placeholder: "@coderabbitai summary"
+  high_level_summary_placeholder: '@coderabbitai summary'
   high_level_summary_instructions: |
     Generate concise release notes as a bullet list grouped under these headings (omit empty groups):
     - **Features** – new capabilities added to the provider
@@ -17,8 +17,8 @@ reviews:
     - **Security** – credential, ACL, or permission changes
     - **Breaking Changes** – public API or configuration shape changes
     - **Chores** – dependency updates, CI changes, refactors
-  auto_title_placeholder: "@coderabbitai"
-  auto_title_instructions: "Follow Conventional Commits: `<type>(<scope>): <short summary>`. Types: feat, fix, chore, docs, refactor, test, ci. Keep it under 72 characters."
+  auto_title_placeholder: '@coderabbitai'
+  auto_title_instructions: 'Follow Conventional Commits: `<type>(<scope>): <short summary>`. Types: feat, fix, chore, docs, refactor, test, ci. Keep it under 72 characters.'
   review_status: true
   review_details: true
   commit_status: true
@@ -37,30 +37,29 @@ reviews:
   enable_prompt_for_ai_agents: true
 
   labeling_instructions:
-    - label: "bug"
-      instructions: "Apply when the PR fixes an incorrect behaviour, crash, or unexpected output in the upload provider (e.g. wrong file URL construction, broken stream handling, failed delete)."
-    - label: "feature"
-      instructions: "Apply when the PR adds a new capability to the provider, such as a new providerOptions field, a new Strapi interface method, or support for additional S3-compatible services."
-    - label: "security"
-      instructions: "Apply when the PR touches credential handling, ACL values, presigned URL logic, IAM permissions, or any other security-sensitive area."
-    - label: "breaking-change"
-      instructions: "Apply when the PR changes the public API (exported types or init() signature), removes a providerOptions field, or alters behaviour in a way that requires consumer migration."
-    - label: "documentation"
-      instructions: "Apply when the PR only updates README.md, code comments, or other documentation without changing runtime behaviour."
-    - label: "dependencies"
-      instructions: "Apply when the PR updates package.json dependencies, devDependencies, or pnpm-lock.yaml."
-    - label: "ci/cd"
-      instructions: "Apply when the PR modifies files under .github/workflows/ or other CI configuration."
-    - label: "test"
-      instructions: "Apply when the PR adds, removes, or refactors test files only (src/**/*.test.ts), without changing production code."
+    - label: 'bug'
+      instructions: 'Apply when the PR fixes an incorrect behaviour, crash, or unexpected output in the upload provider (e.g. wrong file URL construction, broken stream handling, failed delete).'
+    - label: 'feature'
+      instructions: 'Apply when the PR adds a new capability to the provider, such as a new providerOptions field, a new Strapi interface method, or support for additional S3-compatible services.'
+    - label: 'security'
+      instructions: 'Apply when the PR touches credential handling, ACL values, presigned URL logic, IAM permissions, or any other security-sensitive area.'
+    - label: 'breaking-change'
+      instructions: 'Apply when the PR changes the public API (exported types or init() signature), removes a providerOptions field, or alters behaviour in a way that requires consumer migration.'
+    - label: 'documentation'
+      instructions: 'Apply when the PR only updates README.md, code comments, or other documentation without changing runtime behaviour.'
+    - label: 'dependencies'
+      instructions: 'Apply when the PR updates package.json dependencies, devDependencies, or pnpm-lock.yaml.'
+    - label: 'ci/cd'
+      instructions: 'Apply when the PR modifies files under .github/workflows/ or other CI configuration.'
+    - label: 'test'
+      instructions: 'Apply when the PR adds, removes, or refactors test files only (src/**/*.test.ts), without changing production code.'
 
   path_filters:
-    - "!dist/**"
-    - "!node_modules/**"
-    - "!pnpm-lock.yaml"
+    - '!dist/**'
+    - '!node_modules/**'
 
   path_instructions:
-    - path: "src/**/*.ts"
+    - path: 'src/**/*.ts'
       instructions: |
         - Enforce TypeScript strict-mode compliance: no implicit `any`, explicit return types on all exported functions, and proper handling of `null` / `undefined`.
         - Ensure every async function has a try/catch (or propagates errors intentionally) with a descriptive, context-rich error message — never swallow stack traces.
@@ -70,7 +69,7 @@ reviews:
         - Validate that all `Buffer` APIs used are compatible with the Node >=22 engine requirement declared in package.json.
         - Prefer `const` over `let`; use destructuring for repeated property access.
 
-    - path: "src/index.ts"
+    - path: 'src/index.ts'
       instructions: |
         - All six Strapi upload-provider interface methods must be present and correctly typed: `upload`, `uploadStream`, `delete`, `checkFileSize`, `getSignedUrl`, and `isPrivate`.
         - `provider_metadata` must always be populated with at minimum `bucket`, `key`, and `region` so that future `delete` calls remain reliable even if the file moves between providers.
@@ -80,7 +79,7 @@ reviews:
         - `checkFileSize` must throw a Strapi-compatible error (not just `new Error`) if Strapi v5 expects a specific error shape.
         - Confirm the `customParams` spread in `PutObjectCommand` cannot accidentally override `Bucket`, `Key`, or `Body`.
 
-    - path: "src/types.ts"
+    - path: 'src/types.ts'
       instructions: |
         - Exported types must remain compatible with both Strapi v4 and v5 file interfaces; note any divergence explicitly.
         - Prefer `type` aliases over `interface` for plain data shapes to keep consistency with the existing file.
@@ -88,14 +87,14 @@ reviews:
         - `FileMetadata` must declare every field written to `provider_metadata` in `index.ts` so consumers have a stable, documented contract.
         - Consider whether `ProviderOptions.ACL` should accept a broader `string` fallback alongside `ObjectCannedACL` for forward-compatibility with future AWS SDK releases.
 
-    - path: "src/utils.ts"
+    - path: 'src/utils.ts'
       instructions: |
         - `getFileKey` must produce a stable, deterministic key regardless of whether `directory` or `file.path` are absent, empty, or contain leading/trailing slashes.
         - `getFileUrl` must consistently strip `https://` from the `endpoint` and trailing slashes from `cdn`; validate the regex used for this with edge cases (endpoint already lacking protocol, CDN with path prefix).
         - All utility functions must be pure (no side effects, no I/O) and directly unit-testable in isolation.
         - Avoid duplicating the path-normalisation logic that already exists in `getFileKey`; call it from `getFileUrl`.
 
-    - path: "src/**/*.test.ts"
+    - path: 'src/**/*.test.ts'
       instructions: |
         - Use Vitest APIs exclusively: `describe`, `it`/`test`, `expect`, `vi.fn()`, `vi.mock()`, `vi.spyOn()`.
         - All AWS SDK calls must be mocked — no real network calls in unit tests.
@@ -110,7 +109,7 @@ reviews:
         - Avoid snapshot tests for pure utility functions — prefer explicit `expect(...).toBe(...)`.
         - Test file names must mirror the source file (e.g. `utils.test.ts` for `utils.ts`).
 
-    - path: "package.json"
+    - path: 'package.json'
       instructions: |
         - `peerDependencies` should declare the compatible `@strapi/strapi` version range (v4 and/or v5) if the provider depends on Strapi internals or types.
         - `engines.node` must remain `>=22` unless the PR explicitly justifies broadening compatibility.
@@ -119,17 +118,17 @@ reviews:
         - Version bumps must follow Semantic Versioning: patch for bug fixes, minor for backwards-compatible features, major for breaking changes.
         - Ensure `"packageManager"` field is kept in sync with the pnpm version used in CI.
 
-    - path: ".github/workflows/**"
+    - path: '.github/workflows/**'
       instructions: |
         - All secrets must be referenced as `${{ secrets.NAME }}` — never hardcoded or echoed to logs.
-        - Every `uses:` action must be pinned to a version tag (e.g. `actions/checkout@v4`), never `@main` or `@master`.
+        - Every `uses:` action must be pinned to a full commit SHA (e.g. `actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7`). Never use `@main`, `@master`, or mutable version tags like `@v4`.
         - Apply the principle of least privilege: only request the GitHub token permissions actually needed (e.g. `contents: write` only when creating releases).
         - The release workflow must trigger exclusively on `v*` tag pushes to prevent accidental publishes.
         - `NPM_CONFIG_PROVENANCE: true` must remain set to maintain npm supply-chain transparency.
         - Verify Node.js version in `setup-node` matches the `engines.node` constraint in package.json (LTS is acceptable).
         - `pnpm/action-setup` should be kept on the latest stable major version.
 
-    - path: "README.md"
+    - path: 'README.md'
       instructions: |
         - Keep all configuration examples, environment variable tables, and `ProviderOptions` field descriptions in sync with the actual types in `src/types.ts`.
         - Code snippets must use the correct package name `@johngerome/strapi-provider-upload-spaces`.
@@ -143,14 +142,14 @@ reviews:
     auto_incremental_review: true
     auto_pause_after_reviewed_commits: 5
     ignore_title_keywords:
-      - "WIP"
-      - "DO NOT MERGE"
-      - "[SKIP CI]"
-      - "DRAFT"
+      - 'WIP'
+      - 'DO NOT MERGE'
+      - '[SKIP CI]'
+      - 'DRAFT'
     drafts: false
     base_branches:
-      - "main"
-      - "master"
+      - 'main'
+      - 'master'
 
   finishing_touches:
     docstrings:
@@ -160,7 +159,7 @@ reviews:
     simplify:
       enabled: false
     custom:
-      - name: "security audit"
+      - name: 'security audit'
         instructions: |
           Review the entire PR diff for security concerns specific to a cloud-storage upload provider:
           1. Hardcoded or logged credentials / secrets.
@@ -172,7 +171,7 @@ reviews:
 
   pre_merge_checks:
     title:
-      mode: "warning"
+      mode: 'warning'
       requirements: |
         Must follow Conventional Commits: `<type>(<optional scope>): <short summary>`.
         Allowed types: feat, fix, chore, docs, refactor, test, ci, perf, build.
@@ -180,27 +179,92 @@ reviews:
         Must be under 72 characters.
         Must not end with a period.
     description:
-      mode: "warning"
+      mode: 'warning'
     issue_assessment:
-      mode: "warning"
+      mode: 'warning'
     custom_checks:
-      - name: "No hardcoded secrets"
-        mode: "error"
+      - name: 'No hardcoded secrets'
+        mode: 'error'
         instructions: |
-          Fail if any modified file contains what appears to be a hardcoded AWS access key ID (pattern: AKIA[0-9A-Z]{16}),
-          secret access key, or any credential-like string outside of clearly-labelled test fixtures or
-          documentation examples. Environment variable references such as `process.env.DO_SPACE_ACCESS_KEY` are acceptable.
-      - name: "dist not committed"
-        mode: "warning"
+          Scan every added or modified line in the PR diff for the following exact regex patterns.
+          FAIL (do not pass) if any pattern matches in a non-excluded path.
+
+          Patterns:
+            1. AWS Access Key ID:
+               AKIA[0-9A-Z]{16}
+            2. Credential assignment (key=value or key: value style, value ≥8 chars):
+               (?i)(?:secret[_-]?access[_-]?key|access[_-]?key[_-]?id|api[_-]?key|client[_-]?secret|auth[_-]?token)\s*[=:]\s*["']?[A-Za-z0-9/+\-_]{8,}["']?
+
+          Excluded paths — do NOT fail for matches found only in:
+            - README.md or any file matching *.md (documentation examples)
+            - src/**/*.test.ts (test fixtures)
+            - Any file matching *.example or .env.example
+
+          Acceptable patterns — do NOT fail for:
+            - process.env.VARIABLE_NAME
+            - env('VARIABLE_NAME')
+            - providerOptions.credentials.accessKeyId (reading from a parameter, not a literal)
+            - Any string whose right-hand side value is a function call or environment variable reference
+
+          PASS if every credential-like string in non-excluded files is read from
+          environment variables, function parameters, or providerOptions.
+      - name: 'dist not committed'
+        mode: 'warning'
         instructions: |
-          Warn if any file inside the `dist/` directory is added or modified in this PR.
-          Build artifacts should be generated by CI during the release workflow and must not be committed to the repository.
-      - name: "Strapi provider interface completeness"
-        mode: "warning"
+          Inspect the complete list of added, modified, or renamed files in this PR.
+          FAIL if any file path matches the anchored pattern ^dist/ (i.e., the path starts
+          with exactly "dist/", not just contains the word "dist" somewhere).
+
+          Examples that must FAIL:
+            - dist/index.js
+            - dist/index.d.ts
+            - dist/index.js.map
+            - dist/utils.js
+
+          Examples that must PASS (do not flag):
+            - src/index.ts
+            - distribution/something.js  (does not start with "dist/")
+            - README.md
+
+          PASS if no file in the PR diff has a path beginning with dist/.
+          Build artifacts are generated exclusively by the release CI workflow
+          (release.yml, triggered on v* tags) and must never be committed.
+      - name: 'Strapi provider interface completeness'
+        mode: 'warning'
         instructions: |
-          If `src/index.ts` is modified, verify that all six required Strapi upload-provider methods are still
-          exported from the object returned by `init()`: upload, uploadStream, delete, checkFileSize, getSignedUrl, isPrivate.
-          Warn if any method is missing or if its signature has changed in a potentially breaking way.
+          If src/index.ts is modified, verify that the object returned by init() still contains
+          all six methods below with the exact parameter counts and return types listed.
+          FAIL if any method is absent, renamed, or has a different arity or return type.
+
+          Required method signatures (TypeScript):
+            1. upload(file: File, customParams?: object): Promise<File>
+               - 2 parameters; customParams is optional (defaults to {})
+               - Must return Promise<File> with url set and provider_metadata
+                 containing { bucket: string, key: string, region: string }
+
+            2. uploadStream(file: File, customParams?: object): Promise<File>
+               - 2 parameters; customParams is optional (defaults to {})
+               - Must buffer file.stream into file.buffer then delegate to upload()
+               - Must return Promise<File> with the same shape as upload()
+
+            3. delete(file: File, customParams?: object): Promise<void>
+               - 2 parameters; customParams is optional (defaults to {})
+               - Must return Promise<void>
+
+            4. checkFileSize(file: File, options: { sizeLimit: number }): Promise<void>
+               - 2 parameters; second parameter must destructure to { sizeLimit: number }
+               - Must return Promise<void>
+
+            5. getSignedUrl(file: File): Promise<{ url: string }>
+               - 1 parameter
+               - Must return Promise<{ url: string }>
+
+            6. isPrivate(): Promise<boolean>
+               - 0 parameters
+               - Must return Promise<boolean>
+
+          PASS only if all six method names are present on the returned object
+          and each matches the parameter count and return type shown above.
 
   tools:
     # Secret scanning — critical for a project that handles cloud storage credentials
@@ -324,17 +388,17 @@ knowledge_base:
   web_search:
     enabled: true
   learnings:
-    scope: "local"
+    scope: 'local'
   issues:
-    scope: "local"
+    scope: 'local'
   pull_requests:
-    scope: "local"
+    scope: 'local'
 
 code_generation:
   docstrings:
-    language: "en-US"
+    language: 'en-US'
     path_instructions:
-      - path: "src/**/*.ts"
+      - path: 'src/**/*.ts'
         instructions: |
           Generate JSDoc comments for all exported functions and types.
           Include @param (with type), @returns, and @throws tags where applicable.
@@ -342,7 +406,7 @@ code_generation:
           Do not describe implementation details; describe intent and contract.
   unit_tests:
     path_instructions:
-      - path: "src/**/*.ts"
+      - path: 'src/**/*.ts'
         instructions: |
           Generate Vitest unit tests (import from 'vitest').
           Mock all @aws-sdk/client-s3 and @aws-sdk/s3-request-presigner calls with vi.mock().
