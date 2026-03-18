@@ -6,6 +6,7 @@ import {
   ObjectCannedACL,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl as generatePresignedUrl } from '@aws-sdk/s3-request-presigner';
+import { errors } from '@strapi/utils';
 import { File, ProviderOptions } from './types';
 import { getFileKey, getFileUrl } from './utils';
 
@@ -107,7 +108,9 @@ export function init(providerOptions: ProviderOptions) {
       { sizeLimit }: { sizeLimit: number }
     ): Promise<void> {
       if (file.size > sizeLimit) {
-        throw new Error(`File size exceeds limit: ${file.size} > ${sizeLimit}`);
+        throw new errors.PayloadTooLargeError(
+          `File size exceeds limit: ${file.size} > ${sizeLimit}`
+        );
       }
     },
 
@@ -126,7 +129,9 @@ export function init(providerOptions: ProviderOptions) {
         });
         return { url };
       } catch (error) {
-        throw new Error(`Error generating signed URL: ${error}`);
+        throw new errors.ForbiddenError(
+          `Error generating signed URL: ${error}`
+        );
       }
     },
 

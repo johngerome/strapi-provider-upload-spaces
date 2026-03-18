@@ -36,7 +36,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.826.0",
-    "@aws-sdk/s3-request-presigner": "^3.826.0"
+    "@aws-sdk/s3-request-presigner": "^3.826.0",
+    "@strapi/utils": "^5.39.0"
   },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.4",
