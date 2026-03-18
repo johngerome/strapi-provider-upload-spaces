@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  ObjectCannedACL,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl as generatePresignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -43,7 +44,7 @@ export function init(providerOptions: ProviderOptions) {
             Key: fileKey,
             Body: file.buffer,
             ContentType: file.mime,
-            ACL,
+            ACL: ACL as ObjectCannedACL,
           })
         );
 

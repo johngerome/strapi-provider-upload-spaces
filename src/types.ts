@@ -11,7 +11,7 @@ export type ProviderOptions = {
   bucket: string;
   directory?: string;
   cdn?: string;
-  ACL?: ObjectCannedACL;
+  ACL?: ObjectCannedACL | (string & {});
   signedUrlExpires?: number;
 };
 
