@@ -28,7 +28,10 @@ export function init(providerOptions: ProviderOptions) {
   });
 
   return {
-    async upload(file: File, customParams = {}): Promise<File> {
+    async upload(
+      file: File,
+      customParams: Record<string, unknown> = {}
+    ): Promise<File> {
       const fileKey = getFileKey(file, directory);
 
       try {
@@ -61,7 +64,10 @@ export function init(providerOptions: ProviderOptions) {
       }
     },
 
-    async uploadStream(file: File, customParams = {}): Promise<File> {
+    async uploadStream(
+      file: File,
+      customParams: Record<string, unknown> = {}
+    ): Promise<File> {
       const { stream } = file;
 
       if (!stream) {
@@ -87,7 +93,10 @@ export function init(providerOptions: ProviderOptions) {
       });
     },
 
-    async delete(file: File, customParams = {}): Promise<void> {
+    async delete(
+      file: File,
+      customParams: Record<string, unknown> = {}
+    ): Promise<void> {
       const fileKey =
         file.provider_metadata?.key || getFileKey(file, directory);
 
